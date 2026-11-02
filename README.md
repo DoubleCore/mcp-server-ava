@@ -1,4 +1,4 @@
-# ava-mcp-server
+# mcp-server-ava
 
 [Model Context Protocol](https://modelcontextprotocol.io) server for [AVA](https://github.com/antvis/AVA). Load a dataset, inspect it, run SQL, ask questions in natural language, and get charts — from Claude Desktop, Cursor, ChatGPT, or any other MCP client.
 
@@ -7,10 +7,10 @@ AVA does the data access, SQL execution, and chart specs; your MCP client's own 
 ## Install
 
 ```bash
-npm install -g ava-mcp-server @antv/ava@beta
+npm install -g mcp-server-ava @antv/ava@beta
 ```
 
-`@antv/ava` v4 is a peer dependency and is still published under the `beta` tag — install it alongside. Without installing globally: `npx -y -p ava-mcp-server -p @antv/ava@beta ava-mcp-server`.
+`@antv/ava` v4 is a peer dependency and is still published under the `beta` tag — install it alongside. Without installing globally: `npx -y -p mcp-server-ava -p @antv/ava@beta mcp-server-ava`.
 
 Requires Node.js ≥ 22.13.
 
@@ -25,7 +25,7 @@ Add the server to your MCP client config. The `env` block is only needed for the
   "mcpServers": {
     "ava": {
       "command": "npx",
-      "args": ["-y", "ava-mcp-server"],
+      "args": ["-y", "mcp-server-ava"],
       "env": {
         "OPENAI_API_KEY": "sk-...",
         "OPENAI_MODEL": "gpt-4o-mini",

@@ -1,5 +1,5 @@
 {
-  "name": "ava-mcp-server",
+  "name": "mcp-server-ava",
   "version": "0.1.0",
   "description": "MCP server for AVA: load data, inspect schemas, run SQL, analyze in natural language, and build charts from any MCP client.",
   "keywords": [
@@ -16,19 +16,19 @@
     "name": "DoubleCore",
     "url": "https://github.com/DoubleCore"
   },
-  "homepage": "https://github.com/DoubleCore/ava-mcp-server",
+  "homepage": "https://github.com/DoubleCore/mcp-server-ava",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DoubleCore/ava-mcp-server.git"
+    "url": "git+https://github.com/DoubleCore/mcp-server-ava.git"
   },
   "bugs": {
-    "url": "https://github.com/DoubleCore/ava-mcp-server/issues"
+    "url": "https://github.com/DoubleCore/mcp-server-ava/issues"
   },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "ava-mcp-server": "./dist/cli.js"
+    "mcp-server-ava": "./dist/cli.js"
   },
   "exports": {
     ".": {

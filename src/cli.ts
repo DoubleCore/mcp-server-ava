@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * stdio entry point for `ava-mcp-server`.
+ * stdio entry point for `mcp-server-ava`.
  *
  * Configure model access through the environment so client configs stay
  * secret-free:
@@ -28,4 +28,4 @@ process.on('SIGTERM', () => void shutdown().finally(() => process.exit(0)));
 
 await server.connect(transport);
 // Anything written to stdout corrupts the protocol, so diagnostics go to stderr.
-process.stderr.write(`ava-mcp-server ready (maxRows=${maxRows || 200})\n`);
+process.stderr.write(`mcp-server-ava ready (maxRows=${maxRows || 200})\n`);

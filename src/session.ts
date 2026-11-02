@@ -1,7 +1,7 @@
 /**
  * Shared AVA session and result shaping for the MCP tools.
  *
- * This mirrors the session used by `ava-ai-sdk-tools`; the packages stay
+ * This mirrors the session used by `ai-sdk-ava`; the packages stay
  * independent so each can be installed on its own.
  */
 
