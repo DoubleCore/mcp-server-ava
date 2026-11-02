@@ -62,10 +62,11 @@ Every tool returns JSON text. Failures (no dataset loaded, invalid SQL, engine e
 
 ## Rendering a returned chart
 
-`ava_visualize` returns a spec, not HTML. Render it to a standalone page with the AVA CLI, which is already installed alongside this package:
+`ava_visualize` returns a spec, not HTML. Save the spec and render it with the AVA CLI:
 
 ```bash
-npx ava viz --spec chart.json --output chart.html
+npm install -g @antv/ava            # provides the `ava` binary
+npx ava viz --spec @chart.json -o chart.html
 ```
 
 ## Configuration

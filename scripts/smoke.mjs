@@ -69,3 +69,4 @@ if (process.env.OPENAI_API_KEY) {
 
 await client.close();
 console.log('smoke test passed');
+process.exit(0);
