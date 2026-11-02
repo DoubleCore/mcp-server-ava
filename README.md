@@ -7,10 +7,10 @@ AVA does the data access, SQL execution, and chart specs; your MCP client's own 
 ## Install
 
 ```bash
-npm install -g ava-mcp-server @antv/ava
+npm install -g ava-mcp-server @antv/ava@beta
 ```
 
-`@antv/ava` (v4) is a peer dependency — install it alongside. Without installing globally, `npx -y -p ava-mcp-server -p @antv/ava ava-mcp-server` works too.
+`@antv/ava` v4 is a peer dependency and is still published under the `beta` tag — install it alongside. Without installing globally: `npx -y -p ava-mcp-server -p @antv/ava@beta ava-mcp-server`.
 
 Requires Node.js ≥ 22.13.
 
