@@ -97,7 +97,7 @@ OPENAI_API_KEY=... node scripts/smoke.mjs   # also exercises analyze + visualize
 
 ## Publishing (npm trusted publishing / OIDC)
 
-Releases are published through GitHub Actions with npm provenance — no `NPM_TOKEN` secret is stored. The workflow (`.github/workflows/publish.yml`) only runs on a version tag (`v*.*.*`) or a manual `workflow_dispatch` run, gives itself `contents: read` + `id-token: write`, then runs `npm ci` → typecheck → build → test → `npm publish --provenance --access public`. It uses Node 24 and npm 11.21.2 (Trusted Publishing requires Node ≥ 22.14.0 and npm ≥ 11.5.1), disables release-build caching, and requires a tag to exactly match `v` + the `package.json` version.
+Releases are published through GitHub Actions with npm provenance — no `NPM_TOKEN` secret is stored. The workflow (`.github/workflows/publish.yml`) only runs on a version tag (`v*.*.*`) or a manual `workflow_dispatch` run, gives itself `contents: read` + `id-token: write`, then runs `npm ci` → typecheck → build → test → `npm pack --dry-run` → `npm publish --provenance --access public`. It uses Node 24 and npm 11.21.2 (Trusted Publishing requires Node ≥ 22.14.0 and npm ≥ 11.5.1), disables release-build caching, and requires a tag to exactly match `v` + the `package.json` version.
 
 ### One-time npm bootstrap and trust
 
