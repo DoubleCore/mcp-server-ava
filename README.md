@@ -7,10 +7,10 @@ AVA does the data access, SQL execution, and chart specs; your MCP client's own 
 ## Install
 
 ```bash
-npm install -g mcp-server-ava @antv/ava@beta
+npm install -g mcp-server-ava @antv/ava
 ```
 
-`@antv/ava` v4 is a peer dependency and is still published under the `beta` tag — install it alongside. Without installing globally: `npx -y -p mcp-server-ava -p @antv/ava@beta mcp-server-ava`.
+`@antv/ava` v4 is a peer dependency — install it alongside. Without installing globally: `npx -y -p mcp-server-ava -p @antv/ava mcp-server-ava`.
 
 Requires Node.js ≥ 22.13.
 
@@ -97,25 +97,31 @@ OPENAI_API_KEY=... node scripts/smoke.mjs   # also exercises analyze + visualize
 
 ## Publishing (npm trusted publishing / OIDC)
 
-Releases are published through GitHub Actions with npm provenance — no `NPM_TOKEN` secret is stored. The workflow (`.github/workflows/publish.yml`) only runs on a version tag (`v*.*.*`) or a manual `workflow_dispatch` run, gives itself `contents: read` + `id-token: write`, then runs `npm ci` → typecheck → build → test → `npm publish --provenance --access public`.
+Releases are published through GitHub Actions with npm provenance — no `NPM_TOKEN` secret is stored. The workflow (`.github/workflows/publish.yml`) only runs on a version tag (`v*.*.*`) or a manual `workflow_dispatch` run, gives itself `contents: read` + `id-token: write`, then runs `npm ci` → typecheck → build → test → `npm publish --provenance --access public`. It uses Node 24 and npm 11.21.2 (Trusted Publishing requires Node ≥ 22.14.0 and npm ≥ 11.5.1), disables release-build caching, and requires a tag to exactly match `v` + the `package.json` version.
 
-Before the first publish, configure npm's trusted publisher once on npmjs.com (this package is not yet on the registry, so the binding must be set up when the package name is claimed, or pre-configured if it already exists):
+### One-time npm bootstrap and trust
 
-1. After the package is created on npm (or via the `npm publish --provenance` first run from this workflow, which prompts npm to verify it), open the package settings → **Publishing access**.
+npm only exposes Trusted Publisher settings for a package that already exists; it has no pending-publisher flow for a never-published name. An npm owner must therefore bootstrap a new package through npm's authenticated staging flow (`npm stage publish --access public`) and approve that initial release with 2FA. Do not dispatch this workflow to claim an unknown package name. After bootstrapping, increment the version so the first OIDC release does not try to republish the bootstrap version.
+
+Once the package exists, configure the trusted publisher on npmjs.com:
+
+1. Open **Packages → mcp-server-ava → Settings → Trusted publishing** and select **GitHub Actions**.
 2. Add a trusted publisher entry with:
-   - **Repository owner / name:** `DoubleCore/mcp-server-ava`
-   - **Workflow filename:** `publish.yml`
-   - **Environment:** (leave empty — the workflow defines no GitHub environment)
-3. Effective publisher permissions are also driven by npm granular access, so make sure your npm account owns the `mcp-server-ava` package name or scope.
+   - **Organization or user:** `DoubleCore`
+   - **Repository:** `mcp-server-ava`
+   - **Workflow filename:** `publish.yml` (filename only, not `.github/workflows/publish.yml`)
+   - **Environment:** leave empty — the workflow defines no GitHub environment
+   - **Allowed actions:** explicitly allow **`npm publish`**; the default `npm stage publish` permission alone cannot authorize this workflow's direct publish command
+3. Save the entry and complete its first successful publish within two days, before the unvalidated configuration expires. The npm account must own the package and have 2FA enabled.
 
-To cut a release: bump the version in `package.json`, push a tag:
+To cut an OIDC release, bump the version and push the resulting commit and tag:
 
 ```bash
 npm version patch   # or minor / major
 git push --follow-tags
 ```
 
-The workflow then builds and tests before publishing with a public provenance statement. Package names, scopes and visibility are checked here: `mcp-server-ava` is a public, unscoped package, hence `--access public`.
+The workflow then builds and tests before publishing with a public provenance statement. `mcp-server-ava` is a public, unscoped package, hence `--access public`. Verify the result with `npm view mcp-server-ava version`; a successful workflow alone is not proof of a Registry submission.
 
 ## License
 

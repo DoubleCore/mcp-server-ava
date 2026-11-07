@@ -12,6 +12,7 @@
     "charts"
   ],
   "license": "MIT",
+  "mcpName": "io.github.doublecore/mcp-server-ava",
   "author": {
     "name": "DoubleCore",
     "url": "https://github.com/DoubleCore"
@@ -55,12 +56,12 @@
     "@modelcontextprotocol/sdk": "^1.32.2"
   },
   "peerDependencies": {
-    "@antv/ava": "^4.0.0-beta.4 || ^4.0.0"
+    "@antv/ava": "^4.0.0"
   },
   "devDependencies": {
-    "@antv/ava": "^4.0.0-beta.4",
+    "@antv/ava": "^4.0.0",
     "@types/node": "^22.20.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }
