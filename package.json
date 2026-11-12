@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-ava",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server for AVA: load data, inspect schemas, run SQL, analyze in natural language, and build charts from any MCP client.",
   "keywords": [
     "mcp",
