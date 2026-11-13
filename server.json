@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.doublecore/mcp-server-ava",
+  "title": "AVA",
+  "description": "Load data, inspect schemas, run SQL, analyze datasets, and build charts with AVA via MCP.",
+  "repository": {
+    "url": "https://github.com/DoubleCore/mcp-server-ava",
+    "source": "github"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mcp-server-ava",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

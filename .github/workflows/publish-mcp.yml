@@ -1,0 +1,153 @@
+name: Publish to MCP Registry
+
+# Metadata-only release: this workflow never publishes the underlying npm package.
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: mcp-registry-publish
+  cancel-in-progress: false
+
+env:
+  MCP_PUBLISHER_VERSION: v1.8.9
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Verify release context and metadata
+        shell: bash
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$REF" != "refs/heads/main" ]]; then
+            echo "::error::Manual MCP Registry releases must run from main."
+            exit 1
+          fi
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            package_version="$(node --print "require('./package.json').version")"
+            if [[ "$REF_NAME" != "v$package_version" ]]; then
+              echo "::error::Tag $REF_NAME does not match package.json version $package_version."
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$COMMIT_SHA" origin/main; then
+              echo "::error::The tagged commit must be merged into main before publishing."
+              exit 1
+            fi
+          fi
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const server = JSON.parse(fs.readFileSync('server.json', 'utf8'));
+          const errors = [];
+          const npmPackage = server.packages?.length === 1 ? server.packages[0] : undefined;
+
+          if (server.name !== pkg.mcpName) errors.push('server.json name must match package.json mcpName');
+          if (server.version !== pkg.version) errors.push('server.json version must match package.json version');
+          if (lock.version !== pkg.version || lock.packages?.['']?.version !== pkg.version) {
+            errors.push('package-lock.json root versions must match package.json version');
+          }
+          if (!server.description || server.description.length > 100) {
+            errors.push('server.json description must contain 1-100 characters');
+          }
+          if (server.repository?.url !== 'https://github.com/DoubleCore/mcp-server-ava' || server.repository?.source !== 'github') {
+            errors.push('server.json repository must identify DoubleCore/mcp-server-ava on GitHub');
+          }
+          if (!npmPackage || npmPackage.registryType !== 'npm' || npmPackage.identifier !== pkg.name ||
+              npmPackage.version !== pkg.version || npmPackage.transport?.type !== 'stdio') {
+            errors.push('server.json must contain one matching npm package with stdio transport');
+          }
+          if (errors.length) {
+            console.error(errors.map((error) => `::error::${error}`).join('\n'));
+            process.exit(1);
+          }
+          console.log(`Verified ${server.name} version ${server.version} (${server.description.length}-character description).`);
+          NODE
+
+      - name: Verify published npm ownership marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_name="$(node --print "require('./package.json').name")"
+          package_version="$(node --print "require('./package.json').version")"
+          server_name="$(node --print "require('./server.json').name")"
+          if ! published_mcp_name="$(npm view "${package_name}@${package_version}" mcpName)"; then
+            echo "::error::${package_name}@${package_version} is not available on npm yet. Wait for the npm OIDC release, then rerun only this MCP workflow."
+            exit 1
+          fi
+          if [[ "$published_mcp_name" != "$server_name" ]]; then
+            echo "::error::Published npm mcpName '$published_mcp_name' does not match server.json name '$server_name'."
+            exit 1
+          fi
+          echo "Verified npm ${package_name}@${package_version} has mcpName ${published_mcp_name}."
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Verify package contents
+        run: npm pack --dry-run
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Download and verify mcp-publisher
+        shell: bash
+        run: |
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
+
+      - name: Validate MCP metadata
+        run: ./mcp-publisher validate
+
+      - name: Authenticate to MCP Registry with GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish server to MCP Registry
+        run: ./mcp-publisher publish

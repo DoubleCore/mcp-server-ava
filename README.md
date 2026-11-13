@@ -123,6 +123,26 @@ git push --follow-tags
 
 The workflow then builds and tests before publishing with a public provenance statement. `mcp-server-ava` is a public, unscoped package, hence `--access public`. Verify the result with `npm view mcp-server-ava version`; a successful workflow alone is not proof of a Registry submission.
 
+## Publishing (official MCP Registry / GitHub OIDC)
+
+`server.json` names this server `io.github.doublecore/mcp-server-ava` and currently maps version `0.1.2` to the already-published `mcp-server-ava@0.1.2` npm artifact. That artifact contains the same `mcpName`, so publishing or updating Registry metadata at this version does **not** require an npm version bump or another npm publish.
+
+The independent `.github/workflows/publish-mcp.yml` uses GitHub OIDC with no npm credentials and no `npm publish` step. It checks that a manual run targets `main`, that a tag matches the package version and points to a commit merged into `main`, and that `package.json`, `package-lock.json`, `server.json`, and the published npm `mcpName` agree. It then runs the project checks and uses the pinned `mcp-publisher` v1.8.9 release only after verifying its Sigstore bundle with cosign.
+
+For a metadata-only release of the current version, push the commits to `main`, confirm that `npm view mcp-server-ava@0.1.2 mcpName` returns the name above, then dispatch **Publish to MCP Registry** on `main`:
+
+```bash
+gh workflow run publish-mcp.yml --ref main
+```
+
+Version tags also trigger this workflow alongside the separate npm release workflow. It never waits for or republishes npm: if a tag run starts before the new npm artifact is visible, let it fail safely and rerun only the MCP workflow after the npm OIDC release succeeds. For a future package version, update `package.json`, both lockfile root versions, and `server.json` together; do not reuse an already-published npm version.
+
+A successful workflow is not treated as proof of inclusion. Verify the actual Registry API response instead:
+
+```bash
+curl 'https://registry.modelcontextprotocol.io/v0.1/servers?search=mcp-server-ava'
+```
+
 ## License
 
 MIT
