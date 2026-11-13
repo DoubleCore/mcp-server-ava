@@ -125,11 +125,11 @@ The workflow then builds and tests before publishing with a public provenance st
 
 ## Publishing (official MCP Registry / GitHub OIDC)
 
-`server.json` names this server `io.github.doublecore/mcp-server-ava` and currently maps version `0.1.2` to the already-published `mcp-server-ava@0.1.2` npm artifact. That artifact contains the same `mcpName`, so publishing or updating Registry metadata at this version does **not** require an npm version bump or another npm publish.
+`server.json` names this server `io.github.DoubleCore/mcp-server-ava` and currently maps version `0.1.3` to the `mcp-server-ava@0.1.3` npm artifact. The GitHub OIDC namespace and npm `mcpName` comparison are case-sensitive, so this exact capitalization is required. Once that artifact is published with the same `mcpName`, updating Registry metadata at this version does **not** require another npm version bump or npm publish.
 
 The independent `.github/workflows/publish-mcp.yml` uses GitHub OIDC with no npm credentials and no `npm publish` step. It checks that a manual run targets `main`, that a tag matches the package version and points to a commit merged into `main`, and that `package.json`, `package-lock.json`, `server.json`, and the published npm `mcpName` agree. It then runs the project checks and uses the pinned `mcp-publisher` v1.8.9 release only after verifying its Sigstore bundle with cosign.
 
-For a metadata-only release of the current version, push the commits to `main`, confirm that `npm view mcp-server-ava@0.1.2 mcpName` returns the name above, then dispatch **Publish to MCP Registry** on `main`:
+For a metadata-only release of the current version, push the commits to `main`, confirm that `npm view mcp-server-ava@0.1.3 mcpName` returns the name above, then dispatch **Publish to MCP Registry** on `main`:
 
 ```bash
 gh workflow run publish-mcp.yml --ref main
